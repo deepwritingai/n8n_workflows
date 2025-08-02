@@ -1,0 +1,303 @@
+{
+  "name": "001_Article_to_Ideas",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.system_prompt }}",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.user_prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        112,
+        -80
+      ],
+      "id": "dfd1d9b5-9cb2-4f9e-a590-728acca4c3be",
+      "name": "Extract Notes using OpenAI API",
+      "credentials": {
+        "openAiApi": {
+          "id": "hZz3WtDpH7O18UMR",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Node - Convert Markdown to HTML\nconst ideasJSON = $input.first().json.message.content.ideas;\n\nlet ideasHTML = '';\nideasJSON.forEach((idea, index) => {\n  ideasHTML += `\n    <h3>${index + 1}. ${idea.article_idea}</h3>\n    <p>${idea.description}</p>\n    <p>********************************</p>\n  `;\n});\n\nconst styledHTML = `\n<!DOCTYPE html>\n<html>\n  <body>\n      <h1>Article Ideas</h1>\n      <div>\n          ${ideasHTML}\n      </div>\n  </body>\n</html>`;\n\nreturn [{ json: { html: styledHTML } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -80
+      ],
+      "id": "e4854150-4360-42d8-b18e-48a95307c18e",
+      "name": "Format Output"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "={{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        688,
+        -80
+      ],
+      "id": "69c2ec62-b34b-4beb-8fe9-20e4de6ecd43",
+      "name": "Display Output",
+      "webhookId": "014a8c81-55ea-4d27-bce7-ab5ca0f9b00e"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Upload_PDF_file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -80
+      ],
+      "id": "dd884217-4c85-41cf-8e6e-fdae0185ecf5",
+      "name": "Extract text from PDF"
+    },
+    {
+      "parameters": {
+        "formTitle": "Article to Ideas Generator",
+        "formDescription": "This form takes in a PDF file as input and generates article ideas",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload PDF file",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Describe your brand",
+              "fieldType": "textarea",
+              "placeholder": "What do you write about?",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Describe your audience",
+              "fieldType": "textarea",
+              "placeholder": "Who do you write for, what are their pain points?",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Generate Ideas"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        -80
+      ],
+      "id": "5e9fa10d-cc1f-4232-b6d3-e48eb9585d93",
+      "name": "Upload PDF and describe your brand",
+      "webhookId": "04a84c57-0efd-4ab5-8aef-8502fcd6fefd"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c8013ef7-9d7a-42da-be78-1f6fb96894c0",
+              "name": "system_prompt",
+              "value": "=You are an expert content ideator specializing in identifying article ideas that will resonate deeply with our target audience. The goal is to come up with ideas that will lead to newsletters that help build authority online.\n\nHere are the details of my brand: {{ $('Upload PDF and describe your brand').item.json['Describe your brand'] }}\n\nHere are the details of my audience: {{ $('Upload PDF and describe your brand').item.json['Describe your audience'] }}\n\nGenerate output in the following JSON format:\n\n[\n  {\"article_idea\": \"article idea 1\",\n   \"description\": \"what will the article be about\"\n  },\n  {\"article_idea\": \"article idea 2\",\n   \"description\": \"what will the article be about\"\n  },\n  {...}\n]\n\nCome up with 5 article ideas based on the following text:",
+              "type": "string"
+            },
+            {
+              "id": "b7aac325-70b9-424b-a4dc-0573bf9b5e53",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        -80
+      ],
+      "id": "4fc31005-eb97-4cf0-a503-a13e846bd1fe",
+      "name": "Create Prompts"
+    }
+  ],
+  "pinData": {
+    "Extract text from PDF": [
+      {
+        "json": {
+          "numpages": 13,
+          "numrender": 13,
+          "info": {
+            "PDFFormatVersion": "1.4",
+            "Language": "en",
+            "EncryptFilterName": null,
+            "IsLinearized": false,
+            "IsAcroFormPresent": false,
+            "IsXFAPresent": false,
+            "IsCollectionPresent": false,
+            "IsSignaturesPresent": false,
+            "Title": "Build Online Authority with Strategic Content Mapping",
+            "Creator": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+            "Producer": "Skia/PDF m138",
+            "CreationDate": "D:20250731181403+00'00'",
+            "ModDate": "D:20250731181403+00'00'"
+          },
+          "text": "The Beginner's Strategy for Building Authority\nOnline\n... and commanding premium prices\nMAY 18, 2025\n10 Share\nThe old way of selling online is dead.\nBombarding people with ads and hoping something sticks is an expensive gam\nThe new path to revenue isn’t shouting louder than your competition. It’s\nestablishing genuine authority in your niche.\nAnd the simplest way to establish authority online is to become the informatio\nsource for your ideal customer.\nTUHIN PATRA\n39\n\nWhen you create a body of content that proactively solves the pain points your\nideal customer has, or teaches them something that makes their lives better, th\nfeel connected and are much more likely to respond to your offer.\nThis is exactly how HubSpot stood out in a highly saturated and competitive S\nmarket — by creating high-quality, in-depth content.\nAnd once you establish yourself as the go-to authority in your niche, everythin\nyour business becomes easier.\nYou no longer chase clients. They seek you out.\nYour sales conversations shift from convincing people of your value to\ndiscussing how you’ll work together.\nYou can charge premium prices because the ideal customer already recogn\nyour expertise.\nEvery entrepreneur worth their salt knows this.\nThey start creating content with lots of enthusiasm, with the goal of becoming\nauthority in their niche.\nYet most of them never get there. Why?\nThey chase trends, react to random ideas, and write about whatever inspires th\nthat week.\nI call them content hamsters, forever running on the hamster wheel of reactiv\ncreation, starting from zero each time thinking “What should I write about this\nweek?”\n99% of online creators are reactive\n\nAs a result, their content feels scattered, their audience feels confused, and the\ncan’t point to a clear territory they own.\nSix months on, they’re frustrated. The growth plateaus despite working twice\nhard, until they eventually burn out and quit.\nThe fact is, they make content creation a lot harder than it needs to be.\nI call them authority builders.\nWhat I’ve learned studying successful creators is that authority isn’t just abou\ncreating good content.\nIt’s about systematically covering a territory.\nHang on a sec, it’ll become clear.\nAuthority builders understand that each piece of content serves a specific\npurpose.\nThey might publish less frequently, but everything they create strategically bu\ntheir position as the go-to expert.\nTheir content forms a cohesive body of work that naturally leads prospects tow\ntheir offers.\nThey work from systems, not inspiration.\nOnly 1% of creators online create with intentio\nand strategy\n\nThink about someone you consider an authority in their field.\nGo through their content carefully, and you’d see they organize their content i\n4-5 broad themes.\nThese are the things they wish to be known for, also known as content pillars\nTake Justin Welsh, one of the most authoritative voices on solopreneurship as\nexample.\nHis content is strategically organized around six pillars:\n1. Personal Growth\n2. Business Planning\n3. Personal Branding\n4. Social Media Growth\n5. Monetizing Knowledge\n6. Productivity & Time Management\nMarking your territory, or as the geeks call it:\n“identifying your topic taxonomy“\n\nSimilarly, James Clear divides his content into 8 authority pillars:\n1. Creativity\n2. Decision Making\n3. Focus\n4. Habits\n5. Life Lessons\n6. Motivation\n7. Productivity\n8. Self Improvement\n\nOnce these top creators identify the major themes, they define 5-10 specific to\nunder each pillar that their ideal customers genuinely care about.\nThese are more specific, and often address particular pain points or aspiration\nFor example, Justin’s “Business Planning” can be broadly classified into these\npillars:\n1. Finding a profitable niche\n2. Crafting a business roadmap\n3. Becoming a solopreneur\n4. Solopreneur business models\n5. Defining your mission and goals\n\nThis carefully mapped territory (topic taxonomy) covers everything his ideal\naudience needs to know about building a successful one-person business.\nEach piece of content he publishes strengthens his claim on this territory.\nWhen someone discovers his work through a LinkedIn post about “finding you\nprofitable niche,” they naturally discover his other content about business\nplanning, social media growth, and monetization.\nThe result?\nJustin is now recognized as one of the definitive authorities on building a\nsolopreneur business online, making millions in digital product sales, all with\nspending a dime on paid advertising.\nNow that you know what topic taxonomy is, and why it’s important, let’s see h\nto create yours using AI.\nThis prompt works best with Deep Research models like ChatGPT’s Deep\nResearch and Gemini Deep Research.\nOpen up a new research window and paste the below prompt:\nHow to create topic taxonomy using AI\n<Role>:\nYou are an expert market researcher tasked with generating a carefully\nstructured topic taxonomy specifically tailored to my brand. The goal\nto establish myself as the go-to authority in my niche by creating\nstrategic, connected content that positions me as the definitive\nresource for my ideal customers.\nI will provide the following detailed brand documents for your analysi\n1. Unique Value Proposition (UVP)\n\n2. Ideal Reader Persona (audience demographics, behaviors, goals,\ninterests)\n3. Key Pain Points faced by the Ideal Reader\n<Task>:\nYour goal is to deeply research, analyze, and propose a comprehensive\ntopic taxonomy to guide content ideation and ensure alignment with the\nbrand’s UVP and the ideal audience’s needs and pain points.\nStructure your taxonomy clearly as follows:\nLevel 1 (Pillar): Identify 4-6 primary pillars that directly align wit\nthe brand’s UVP and strongly address the audience’s pain points.\nThese should be broad enough to encompass multiple sub-topics but\nspecific enough to claim a distinct territory.\nProvide a brief rationale explicitly connecting each pillar to the\nbrand’s UVP and the ideal reader's identified pain points.\nLevel 2 (Sub-pillars/Clusters): Under each pillar, propose 5-10 focuse\nsub-pillars or clusters.\nThese should address specific pain points, questions, or aspirations m\naudience has.\nFor each sub-pillar, include a concise rationale that clearly links it\nto both its parent pillar and audience pain points.\nLevel 3 (Specific Topics/Questions): Within each sub-pillar, list 3-5\nspecific, actionable, and engaging topics or questions that resonate\nwith the ideal audience and address their specific concerns or\ninterests.\n<Important Guidelines>:\n* Your output must be based entirely on the provided brand documents.\n* Clearly state your rationale for each level, linking explicitly back\nto the UVP and audience pain points.\n* If the provided documentation is unclear or insufficient for confide\ntaxonomy generation, explicitly state any uncertainties and request\nadditional clarifications from the user rather than guessing.\n\nPaste your UVP, Ideal reader persona, and their pain points at the designated\nplaces.\nCheck this article in case you need help creating any of the above.\nAnswer any follow-up questions the model asks and wait for the results.\n<Output Format>:\nPresent your findings strictly in the following structured format:\nLevel 1 – Pillar #1: [Name of Pillar]\n- Rationale (briefly connect pillar to UVP & pain points)\n- Level 2 – Sub-pillar #1:\n- Rationale (connection to Pillar & audience pain points)\n- Level 3: Specific topics/questions:\n1. [Specific topic/question]\n2. [Specific topic/question]\n3. [Specific topic/question]\n- Level 2 – Sub-pillar #2:\n- Rationale\n- Level 3: Specific topics/questions:\n1. ...\n2. ...\n3. ...\n(Continue clearly through all pillars)\n<UVP>:\n[Paste your UVP here]\n<Ideal Reader Persona>:\n[Paste your ideal reader persona here]\n<Key Pain Points>:\n[Paste your ideal reader's pain points here]\n#####\nPlease begin by thoroughly analyzing the provided documents and reques\nclarification immediately if you encounter insufficient detail or\nambiguity to ensure maximum accuracy and relevance of your taxonomy\nproposal.\n\nHere’s a pillar it generated for a hypothetical business that sells turmeric-base\nhealth drink:\nThe pillars are broad and evergreen, and each has a few specific sub-themes.\nFor instance, under Lifestyle & Recipes, sub-topics like “pre-workout mockta\nor “golden-milk lattes” indicate recurring content ideas (perhaps a series of re\nposts or lifestyle tips centred on those themes).\nNotice how each sub-theme is narrow enough to be interesting, but not so nar\nthat you’d run out of content ideas.\nPretty solid!\nStore your taxonomy in a document and use it in your next ideation session.\nThe question is no longer “What should I write about this week?”\nYou simply look at the map and ask “Which part of my territory needs strengtheni\nright now?”\nDo not just ask the AI to produce article ideas. Specify the pillar and subpillar\nyou’d want to create content around.\nHow to use your territory map to build authorit\n\nThe aim is to produce enough content under each pillar that someone explorin\nyour site could get a full education on that theme.\nWhen creating content, use your taxonomy to create meta tags and on-page SE\nInclude pillar keywords in category pages, and sub-topic keywords in titles an\nheadings.\nRemember, this taxonomy is just the first draft. Over time, you may need to tw\nyour taxonomy. Maybe one pillar isn’t performing or you discover a new pillar\nemerging from audience feedback.\nSchedule periodic check-ins to evaluate if your taxonomy still reflects your\ncontent and audience interests. If you pivot your business, the taxonomy shou\npivot with you.\nHere’s what happens when you implement a strategic topic taxonomy:\n1. Your content creation becomes effortless. No more wondering what to wr\nabout. Your map guides you.\n2. Your audience starts recognizing patterns in your content. They begin to\nassociate you with specific expertise territories and return to you for more\ninformation.\n3. Search engines start trusting your site on certain topics. When a website\ncovers a subject in great detail through many interrelated pieces, Google\nstarts viewing it as an authority on that subject.\nYou transform from just another content creator into a recognized authority,\nsomeone whose opinion matters, whose expertise is valued, and whose offers\nIterate\nFrom scattered content to genuine authority\n\ncommand premium prices.\nSo ask yourself: Are you still running on the content hamster wheel, or are you\nready to start building with intention?\nThanks for reading Deep Writing! Subscribe for\nmore actionable strategies to build AI-powered\ncontent systems and grow your business.\nDiscussion about this post\nPrevious Next\nWrite a comment...\n19 May\nLiked by Tuhin Patra\n1 reply by Tuhin Patra\nBryan Tilos \nStill Waters\nValuable info! 😃 Thanks for the wonder insight and action 🪜 steps 🙏🏼\nLIKED (1) REPLY\n19 May\nLiked by Tuhin Patra\nCharisse Tyson \nRV Living with Jesus at the Whe…\nI'm going to have to give this a try. Thanks for your help. :)\nLIKED (1) REPLY\nComments Restacks\n\n8 more comments...\n2 replies by Tuhin Patra and others\n© 2025 Tuhin Patra ∙ Privacy ∙ Terms ∙ Collection notice\nSubstack is the home for great culture",
+          "version": "5.3.31"
+        }
+      }
+    ],
+    "Extract Notes using OpenAI API": [
+      {
+        "json": {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": {
+              "ideas": [
+                {
+                  "article_idea": "How to Escape the Content Hamster Wheel: Building a Systematic Content Machine",
+                  "description": "This article will expose the pitfalls of reactive, inspiration-led content creation and walk solopreneurs through steps to move toward an intentional, system-driven approach. It will cover the transition from scattered output to a cohesive, authority-building content strategy, including mapping core themes and leveraging repeatable processes."
+                },
+                {
+                  "article_idea": "Topic Taxonomy 101: The Secret Structure Behind Authority-Building Content",
+                  "description": "This piece will introduce readers to the concept of topic taxonomies—how authority creators map out content pillars, sub-pillars, and supporting topics to strategically cover their territory online. It will provide actionable guidance on identifying and creating a taxonomy tailored to the reader’s niche, highlighting its benefits for perceived authority and business growth."
+                },
+                {
+                  "article_idea": "Leveraging AI for Strategic Content Planning: Move Beyond Random Hacks to Integrated Workflows",
+                  "description": "This article will address the audience’s frustration with disjointed, one-off AI tools by presenting a step-by-step process for using AI to develop a strategic content plan. It will show how to connect brand documents, audience pain points, and AI-powered research to build a long-term, voice-consistent content pipeline."
+                },
+                {
+                  "article_idea": "From Expertise to Influence: Monetizing Your Knowledge With Authority-Driven Content",
+                  "description": "This article will lay out the path solopreneurs can take to transform unstructured expertise into revenue-generating content products. It will explain how building authority through cohesive, audience-aligned content leads to opportunities for premium offers, productized services, and digital courses—making scaling possible without sacrificing expertise or voice."
+                },
+                {
+                  "article_idea": "Periodic Content Audits: Keeping Your Authority Pillars Relevant and Resonant",
+                  "description": "This article will teach solopreneurs how—and why—to regularly evaluate and refine their content taxonomy. It’ll provide a practical framework for reviewing pillar performance, incorporating audience feedback, and ensuring each theme continues to support their business growth and online reputation over time."
+                }
+              ]
+            },
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      }
+    ],
+    "Format Output": [
+      {
+        "json": {
+          "html": "\n<!DOCTYPE html>\n<html>\n  <body>\n      <h1>Article Ideas</h1>\n      <div>\n          \n    <h3>1. How to Escape the Content Hamster Wheel: Building a Systematic Content Machine</h3>\n    <p>This article will expose the pitfalls of reactive, inspiration-led content creation and walk solopreneurs through steps to move toward an intentional, system-driven approach. It will cover the transition from scattered output to a cohesive, authority-building content strategy, including mapping core themes and leveraging repeatable processes.</p>\n    <p>********************************</p>\n  \n    <h3>2. Topic Taxonomy 101: The Secret Structure Behind Authority-Building Content</h3>\n    <p>This piece will introduce readers to the concept of topic taxonomies—how authority creators map out content pillars, sub-pillars, and supporting topics to strategically cover their territory online. It will provide actionable guidance on identifying and creating a taxonomy tailored to the reader’s niche, highlighting its benefits for perceived authority and business growth.</p>\n    <p>********************************</p>\n  \n    <h3>3. Leveraging AI for Strategic Content Planning: Move Beyond Random Hacks to Integrated Workflows</h3>\n    <p>This article will address the audience’s frustration with disjointed, one-off AI tools by presenting a step-by-step process for using AI to develop a strategic content plan. It will show how to connect brand documents, audience pain points, and AI-powered research to build a long-term, voice-consistent content pipeline.</p>\n    <p>********************************</p>\n  \n    <h3>4. From Expertise to Influence: Monetizing Your Knowledge With Authority-Driven Content</h3>\n    <p>This article will lay out the path solopreneurs can take to transform unstructured expertise into revenue-generating content products. It will explain how building authority through cohesive, audience-aligned content leads to opportunities for premium offers, productized services, and digital courses—making scaling possible without sacrificing expertise or voice.</p>\n    <p>********************************</p>\n  \n    <h3>5. Periodic Content Audits: Keeping Your Authority Pillars Relevant and Resonant</h3>\n    <p>This article will teach solopreneurs how—and why—to regularly evaluate and refine their content taxonomy. It’ll provide a practical framework for reviewing pillar performance, incorporating audience feedback, and ensuring each theme continues to support their business growth and online reputation over time.</p>\n    <p>********************************</p>\n  \n      </div>\n  </body>\n</html>"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Extract Notes using OpenAI API": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Output": {
+      "main": [
+        [
+          {
+            "node": "Display Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Display Output": {
+      "main": [
+        []
+      ]
+    },
+    "Extract text from PDF": {
+      "main": [
+        [
+          {
+            "node": "Create Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload PDF and describe your brand": {
+      "main": [
+        [
+          {
+            "node": "Extract text from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Prompts": {
+      "main": [
+        [
+          {
+            "node": "Extract Notes using OpenAI API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "51f95ef3-c269-42e9-a069-218164434e9b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7807170238ab45bdf23b6b7231f477cc99134cc9e77d9c1527f42dc4a4cab8f"
+  },
+  "id": "mIpjn4zjV747vRYQ",
+  "tags": []
+}

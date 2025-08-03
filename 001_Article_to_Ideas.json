@@ -1,0 +1,227 @@
+{
+  "name": "001_Article_to_Ideas",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Code Node - Convert Markdown to HTML\nconst ideasJSON = $input.first().json.message.content.ideas;\n\nlet ideasHTML = '';\nideasJSON.forEach((idea, index) => {\n  ideasHTML += `\n    <h3>${index + 1}. ${idea.article_idea}</h3>\n    <p>${idea.description}</p>\n    <p>********************************</p>\n  `;\n});\n\nconst styledHTML = `\n<!DOCTYPE html>\n<html>\n  <body>\n      <h1>Article Ideas</h1>\n      <div>\n          ${ideasHTML}\n      </div>\n  </body>\n</html>`;\n\nreturn [{ json: { html: styledHTML } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        176
+      ],
+      "id": "a9f48f9e-32dc-449c-8fed-96bc8e36191c",
+      "name": "Format Output"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "showText",
+        "responseText": "={{ $json.html }}"
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        704,
+        176
+      ],
+      "id": "450ec81e-5df9-4f9e-92e8-e64a7405595e",
+      "name": "Display Output",
+      "webhookId": "014a8c81-55ea-4d27-bce7-ab5ca0f9b00e"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Upload_PDF_file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        176
+      ],
+      "id": "26d7fc03-d57e-4517-81f7-a5d26a428d54",
+      "name": "Extract text from PDF"
+    },
+    {
+      "parameters": {
+        "formTitle": "Article to Ideas Generator",
+        "formDescription": "This form takes in a PDF file as input and generates article ideas",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload PDF file",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Describe your brand",
+              "fieldType": "textarea",
+              "placeholder": "What do you write about?",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Describe your audience",
+              "fieldType": "textarea",
+              "placeholder": "Who do you write for, what are their pain points?",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Generate Ideas"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        176
+      ],
+      "id": "e7651fa9-6aad-464d-abd5-2a325905be62",
+      "name": "Upload PDF and describe your brand",
+      "webhookId": "04a84c57-0efd-4ab5-8aef-8502fcd6fefd"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c8013ef7-9d7a-42da-be78-1f6fb96894c0",
+              "name": "system_prompt",
+              "value": "=You are an expert content ideator specializing in identifying article ideas that will resonate deeply with our target audience. The goal is to come up with ideas that will lead to newsletters that help build authority online.\n\nHere are the details of my brand: {{ $('Upload PDF and describe your brand').item.json['Describe your brand'] }}\n\nHere are the details of my audience: {{ $('Upload PDF and describe your brand').item.json['Describe your audience'] }}\n\nIMPORTANT: Return ONLY a valid JSON array with no additional wrapping or formatting. Do not include any text before or after the JSON.\n\nGenerate output in this exact format::\nideas: [\n  {\"article_idea\": \"article idea 1\",\n   \"description\": \"what will the article be about\"\n  },\n  {\"article_idea\": \"article idea 2\",\n   \"description\": \"what will the article be about\"\n  },\n  {...}\n]\n\nCome up with 5 article ideas based on the following text:",
+              "type": "string"
+            },
+            {
+              "id": "b7aac325-70b9-424b-a4dc-0573bf9b5e53",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        176
+      ],
+      "id": "5108e536-05f9-43bf-af42-d842efbf41c2",
+      "name": "Create Prompts"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.system_prompt }}",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.user_prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        128,
+        176
+      ],
+      "id": "86ea3e50-78ea-4a1f-8b70-7e5b96b143de",
+      "name": "Generate ideas using OpenAI API",
+      "credentials": {
+        "openAiApi": {
+          "id": "O9xueFV7oFZVAZ9x",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Format Output": {
+      "main": [
+        [
+          {
+            "node": "Display Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract text from PDF": {
+      "main": [
+        [
+          {
+            "node": "Create Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload PDF and describe your brand": {
+      "main": [
+        [
+          {
+            "node": "Extract text from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate ideas using OpenAI API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate ideas using OpenAI API": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8ffa3476-9c70-4c89-a547-a47c38ea69d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7807170238ab45bdf23b6b7231f477cc99134cc9e77d9c1527f42dc4a4cab8f"
+  },
+  "id": "mIpjn4zjV747vRYQ",
+  "tags": []
+}
